@@ -1,151 +1,130 @@
-// Handwriting Book Publication
-// Customer Registration, Login and Dashboard
+const API = "/api";
 
-function showSection(sectionId) {
-    document.querySelectorAll("main .card").forEach(section => {
-        section.classList.add("hidden");
-    });
+// SHOW MESSAGE
+function showMessage(message, success = false) {
+    const box = document.getElementById("authMessage");
 
-    const selectedSection = document.getElementById(sectionId);
-
-    if (selectedSection) {
-        selectedSection.classList.remove("hidden");
-    }
-
-    showMessage("");
+    box.textContent = message;
+    box.style.color = success ? "green" : "red";
 }
 
-// Display messages
-function showMessage(message, isError = false) {
-    const messageBox = document.getElementById("message");
-
-    messageBox.textContent = message;
-    messageBox.style.color = isError ? "#ff5555" : "#d4af37";
-}
-
-// Customer Registration
-document.getElementById("registerForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
+// REGISTER
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
     const mobile = document.getElementById("registerMobile").value.trim();
     const password = document.getElementById("registerPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (password !== confirmPassword) {
+        return showMessage("Passwords do not match.");
+    }
 
     try {
-        const response = await fetch("/api/register", {
+        const response = await fetch(`${API}/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                mobile: mobile,
-                password: password
-            })
+            credentials: "include",
+            body: JSON.stringify({ mobile, password })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            showMessage(data.message, true);
-            return;
+            return showMessage(data.message || "Registration failed.");
         }
 
-        showMessage("Account created successfully!");
+        showMessage("Account created successfully. Please login.", true);
 
         document.getElementById("registerForm").reset();
 
-        await loadDashboard();
-
     } catch (error) {
-        showMessage("Server connection failed. Please try again.", true);
+        showMessage("Server connection failed.");
     }
 });
 
-// Customer Login
-document.getElementById("loginForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
+
+// LOGIN
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
     const mobile = document.getElementById("loginMobile").value.trim();
     const password = document.getElementById("loginPassword").value;
 
     try {
-        const response = await fetch("/api/login", {
+        const response = await fetch(`${API}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                mobile: mobile,
-                password: password
-            })
+            credentials: "include",
+            body: JSON.stringify({ mobile, password })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            showMessage(data.message, true);
-            return;
+            return showMessage(data.message || "Login failed.");
         }
+
+        showMessage("Login successful!", true);
 
         document.getElementById("loginForm").reset();
 
         await loadDashboard();
 
     } catch (error) {
-        showMessage("Server connection failed. Please try again.", true);
+        showMessage("Server connection failed.");
     }
 });
 
-// Load Customer Dashboard
+
+// LOAD CUSTOMER DASHBOARD
 async function loadDashboard() {
     try {
-        const response = await fetch("/api/me");
+        const response = await fetch(`${API}/me`, {
+            credentials: "include"
+        });
 
         if (!response.ok) {
-            showSection("welcomeSection");
             return;
         }
 
         const data = await response.json();
 
-        document.getElementById("customerWelcome").textContent =
-            "Welcome, " + (data.user.fullName || data.user.mobile);
+        document.getElementById("dashboardSection").hidden = false;
 
-        showSection("dashboardSection");
+        document.getElementById("dashboardMobile").textContent =
+            "Mobile Number: " + (data.mobile || "");
 
     } catch (error) {
-        showMessage("Unable to load dashboard.", true);
+        console.error("Dashboard error:", error);
     }
 }
 
-// Customer Logout
-async function logout() {
+
+// LOGOUT
+document.getElementById("logoutBtn").addEventListener("click", async () => {
     try {
-        const response = await fetch("/api/logout", {
-            method: "POST"
+        const response = await fetch(`${API}/logout`, {
+            method: "POST",
+            credentials: "include"
         });
 
         if (response.ok) {
-            showSection("welcomeSection");
-            showMessage("You have logged out successfully.");
+            document.getElementById("dashboardSection").hidden = true;
+            showMessage("You have logged out successfully.", true);
         }
 
     } catch (error) {
-        showMessage("Logout failed. Please try again.", true);
+        showMessage("Unable to logout.");
     }
-}
+});
 
-// Check existing login when website opens
-window.addEventListener("DOMContentLoaded", async function() {
-    try {
-        const response = await fetch("/api/me");
 
-        if (response.ok) {
-            await loadDashboard();
-        } else {
-            showSection("welcomeSection");
-        }
-
-    } catch (error) {
-        showSection("welcomeSection");
-    }
+// CHECK EXISTING LOGIN
+document.addEventListener("DOMContentLoaded", () => {
+    loadDashboard();
 });
