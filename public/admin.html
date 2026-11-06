@@ -1,301 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel | Handwriting Book Publication</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+    <title>Admin Panel | Handwriting Book Publication</title>
 
-    body {
-      background: #080808;
-      color: #fff;
-      padding: 20px;
-    }
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      max-width: 950px;
-      margin: 40px auto;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            background: #080808;
+            color: white;
+        }
 
-    h1, h2 {
-      color: #d4af37;
-      margin-bottom: 20px;
-    }
+        header {
+            background: #111;
+            padding: 20px;
+            border-bottom: 2px solid #d4af37;
+            text-align: center;
+        }
 
-    .card {
-      background: #171717;
-      border: 1px solid #b89535;
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 20px;
-    }
+        header h1 {
+            color: #d4af37;
+            font-size: 25px;
+        }
 
-    input, button {
-      width: 100%;
-      padding: 13px;
-      margin: 10px 0;
-      border-radius: 6px;
-      font-size: 16px;
-    }
+        header p {
+            margin-top: 8px;
+            color: #ccc;
+        }
 
-    input {
-      background: #222;
-      color: white;
-      border: 1px solid #555;
-    }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 25px 15px;
+        }
 
-    button {
-      background: #d4af37;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
+        .login-box {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 30px;
+            background: #151515;
+            border: 1px solid #d4af37;
+            border-radius: 12px;
+        }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-    }
+        h2 {
+            color: #d4af37;
+            text-align: center;
+            margin-bottom: 25px;
+        }
 
-    .stat {
-      background: #242424;
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid #80651f;
-    }
+        input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            background: #080808;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 6px;
+        }
 
-    .stat h3 {
-      color: #d4af37;
-      margin-bottom: 10px;
-    }
-
-    .stat p {
-      font-size: 25px;
-    }
-
-    #dashboard {
-      display: none;
-    }
-
-    #message {
-      margin-top: 10px;
-      color: #d4af37;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <h1>Handwriting Book Publication</h1>
-
-  <div class="card" id="loginBox">
-    <h2>Admin Login</h2>
-
-    <form id="loginForm">
-      <input
-        type="text"
-        id="username"
-        placeholder="Admin Username"
-        required
-      >
-
-      <input
-        type="password"
-        id="password"
-        placeholder="Admin Password"
-        required
-      >
-
-      <button type="submit">Login to Admin Panel</button>
-    </form>
-
-    <p id="message"></p>
-  </div>
-
-  <div id="dashboard">
-
-    <div class="card">
-      <h2>Admin Dashboard</h2>
-      <p>Welcome to your administration panel.</p>
-      <br>
-      <button onclick="loadDashboard()">Refresh Dashboard</button>
-      <button onclick="logout()">Logout</button>
-    </div>
-
-    <div class="stats">
-
-      <div class="stat">
-        <h3>Total Customers</h3>
-        <p id="customers">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Pending Registrations</h3>
-        <p id="pending">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Approved Registrations</h3>
-        <p id="approved">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Rejected Registrations</h3>
-        <p id="rejected">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Pending Payments</h3>
-        <p id="pendingPayments">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Approved Payments</h3>
-        <p id="approvedPayments">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Total Charges</h3>
-        <p id="charges">0</p>
-      </div>
-
-      <div class="stat">
-        <h3>Salary Records</h3>
-        <p id="salaries">0</p>
-      </div>
-
-    </div>
-  </div>
-
-</div>
-
-<script>
-async function checkLogin() {
-  try {
-    const response = await fetch("/api/admin/me", {
-      credentials: "include"
-    });
-
-    if (response.ok) {
-      showDashboard();
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-document.getElementById("loginForm").addEventListener(
-  "submit",
-  async function(event) {
-    event.preventDefault();
-
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const message = document.getElementById("message");
-
-    try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        message.textContent = data.message || "Login failed";
-        return;
-      }
-
-      message.textContent = "Login successful";
-      showDashboard();
-
-    } catch (error) {
-      message.textContent = "Server connection failed";
-    }
-  }
-);
-
-function showDashboard() {
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("dashboard").style.display = "block";
-  loadDashboard();
-}
-
-async function loadDashboard() {
-  try {
-    const response = await fetch("/api/dashboard", {
-      credentials: "include"
-    });
-
-    if (response.status === 401 || response.status === 403) {
-      logout();
-      return;
-    }
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      alert(data.message || "Unable to load dashboard");
-      return;
-    }
-
-    document.getElementById("customers").textContent =
-      data.totalCustomers ?? 0;
-
-    document.getElementById("pending").textContent =
-      data.pendingRegistrations ?? 0;
-
-    document.getElementById("approved").textContent =
-      data.approvedRegistrations ?? 0;
-
-    document.getElementById("rejected").textContent =
-      data.rejectedRegistrations ?? 0;
-
-    document.getElementById("pendingPayments").textContent =
-      data.pendingPayments ?? 0;
-
-    document.getElementById("approvedPayments").textContent =
-      data.approvedPayments ?? 0;
-
-    document.getElementById("charges").textContent =
-      data.totalCharges ?? 0;
-
-    document.getElementById("salaries").textContent =
-      data.totalSalaries ?? 0;
-
-  } catch (error) {
-    alert("Unable to connect to server");
-  }
-}
-
-async function logout() {
-  try {
-    await fetch("/api/admin/logout", {
-      method: "POST",
-      credentials: "include"
-    });
-  } finally {
-    location.reload();
-  }
-}
-
-checkLogin();
-</script>
-
-</body>
-  </html>
+        button {
+            padding: 12px 18px;
+            background: #d4af37;
+            color: black;
+            border: none;
+           
