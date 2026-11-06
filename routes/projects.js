@@ -1,55 +1,53 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const router = express.Router();
-
 const Project = require("../models/Project");
 const { adminAuth } = require("../middleware/auth");
 
-// PUBLIC: Get all active projects
+const router = express.Router();
+
+// GET ALL ACTIVE PROJECTS
 router.get("/", async (req, res) => {
   try {
-    const projects = await Project.find({
-      active: true
-    }).sort({ createdAt: 1 });
+    const projects = await Project.find({ active: true }).sort({
+      createdAt: -1
+    });
 
-    res.json({
+    res.status(200).json({
       success: true,
       projects
     });
-
   } catch (error) {
-    console.error("Projects error:", error);
+    console.error("GET PROJECTS ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message: "Unable to load projects."
+      message: "Unable to fetch projects"
     });
   }
 });
 
-// ADMIN: Get all projects
-// IMPORTANT: Keep this route before /:id
+// ADMIN: GET ALL PROJECTS
 router.get("/admin/all", adminAuth, async (req, res) => {
   try {
-    const projects = await Project.find()
-      .sort({ createdAt: -1 });
+    const projects = await Project.find().sort({
+      createdAt: -1
+    });
 
-    res.json({
+    res.status(200).json({
       success: true,
       projects
     });
-
   } catch (error) {
-    console.error("Admin projects error:", error);
+    console.error("ADMIN PROJECTS ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message: "Unable to load all projects."
+      message: "Unable to fetch all projects"
     });
   }
 });
 
-// ADMIN: Add new project
+// ADMIN: ADD PROJECT
 router.post("/admin/add", adminAuth, async (req, res) => {
   try {
     const {
@@ -63,56 +61,52 @@ router.post("/admin/add", adminAuth, async (req, res) => {
 
     if (
       !projectName ||
-      !Number.isFinite(Number(pages)) ||
-      Number(pages) <= 0 ||
-      !Number.isFinite(Number(sides)) ||
-      Number(sides) <= 0 ||
-      !Number.isFinite(Number(duration)) ||
-      Number(duration) <= 0 ||
-      !Number.isFinite(Number(salary)) ||
-      Number(salary) <= 0 ||
-      !Number.isFinite(Number(registrationFee)) ||
-      Number(registrationFee) < 0
+      pages === undefined ||
+      sides === undefined ||
+      duration === undefined ||
+      salary === undefined ||
+      registrationFee === undefined
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please enter valid project details."
+        message: "All project fields are required"
       });
     }
 
     const project = await Project.create({
-      projectName: projectName.trim(),
-      pages: Number(pages),
-      sides: Number(sides),
-      duration: Number(duration),
-      salary: Number(salary),
-      registrationFee: Number(registrationFee),
+      projectName,
+      pages,
+      sides,
+      duration,
+      salary,
+      registrationFee,
       active: true
     });
 
     res.status(201).json({
       success: true,
-      message: "Project added successfully.",
+      message: "Project added successfully",
       project
     });
-
   } catch (error) {
-    console.error("Add project error:", error);
+    console.error("ADD PROJECT ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message: "Unable to add project."
+      message: error.message
     });
   }
 });
 
-// ADMIN: Update project
+// ADMIN: UPDATE PROJECT
 router.patch("/admin/:id", adminAuth, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid project ID."
+        message: "Invalid project ID"
       });
     }
 
@@ -126,24 +120,17 @@ router.patch("/admin/:id", adminAuth, async (req, res) => {
       "active"
     ];
 
-    const updates = {};
+    const updateData = {};
 
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
+        updateData[field] = req.body[field];
       }
     }
 
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No valid fields provided."
-      });
-    }
-
     const project = await Project.findByIdAndUpdate(
-      req.params.id,
-      updates,
+      id,
+      updateData,
       {
         new: true,
         runValidators: true
@@ -153,95 +140,104 @@ router.patch("/admin/:id", adminAuth, async (req, res) => {
     if (!project) {
       return res.status(404).json({
         success: false,
-        message: "Project not found."
+        message: "Project not found"
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Project updated successfully.",
+      message: "Project updated successfully",
       project
     });
-
   } catch (error) {
-    console.error("Update project error:", error);
+    console.error("UPDATE PROJECT ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message: "Unable to update project."
+      message: error.message
     });
   }
 });
 
-// ADMIN: Deactivate project
+// ADMIN: DEACTIVATE PROJECT
 router.patch("/admin/:id/deactivate", adminAuth, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid project ID."
+        message: "Invalid project ID"
       });
     }
 
     const project = await Project.findByIdAndUpdate(
-      req.params.id,
+      id,
       { active: false },
-      { new: true }
+      {
+        new: true,
+        runValidators: true
+      }
     );
 
     if (!project) {
       return res.status(404).json({
         success: false,
-        message: "Project not found."
+        message: "Project not found"
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Project deactivated successfully.",
+      message: "Project deactivated successfully",
       project
     });
-
   } catch (error) {
-    console.error("Deactivate project error:", error);
+    console.error("DEACTIVATE PROJECT ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message: "Unable to deactivate project."
+      message: error.message
     });
   }
 });
 
-// PUBLIC: Get one active project
+// GET SINGLE PROJECT
 router.get("/:id", async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid project ID."
+        message: "Invalid project ID"
       });
     }
 
     const project = await Project.findOne({
-      _id: req.params.id,
+      _id: id,
       active: true
     });
 
     if (!project) {
       return res.status(404).json({
         success: false,
-        message: "Project not found."
+        message: "Project not found"
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       project
     });
-
   } catch (error) {
-    console.error("Single project error:", error);
+    console.error("GET SINGLE PROJECT ERROR:", error);
 
     res.status(500).json({
       success: false,
-      message
+      message: "Unable to fetch project"
+    });
+  }
+});
+
+module.exports = router;
