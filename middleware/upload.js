@@ -1,49 +1,51 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
-const uploadDirectory = path.join(__dirname, "../uploads");
+const uploadPath = path.join(__dirname, "..", "uploads");
 
-if (!fs.existsSync(uploadDirectory)) {
-    fs.mkdirSync(uploadDirectory, { recursive: true });
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDirectory);
-    },
+  destination: (req, file, cb) => {
+    cb(null, uploadPath);
+  },
 
-    filename: function (req, file, cb) {
-        const uniqueName =
-            Date.now() + "-" +
-            Math.round(Math.random() * 1000000000) +
-            path.extname(file.originalname);
+  filename: (req, file, cb) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const uniqueName = crypto.randomBytes(16).toString("hex") + extension;
 
-        cb(null, uniqueName);
-    }
+    cb(null, uniqueName);
+  }
 });
 
-const fileFilter = (req, file, cb) => {
-    const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "application/pdf"
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error("Only JPG, PNG, WEBP and PDF files are allowed."));
-    }
+const allowedTypes = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+  "application/pdf": [".pdf"]
 };
 
+function fileFilter(req, file, cb) {
+  const extension = path.extname(file.originalname).toLowerCase();
+  const allowedExtensions = allowedTypes[file.mimetype];
+
+  if (allowedExtensions && allowedExtensions.includes(extension)) {
+    return cb(null, true);
+  }
+
+  cb(new Error("Only JPG, JPEG, PNG, WEBP and PDF files are allowed."));
+}
+
 const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024
-    }
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
 });
 
 module.exports = upload;
