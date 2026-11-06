@@ -5,13 +5,21 @@ const router = express.Router();
 const Project = require("../models/Project");
 const { adminAuth } = require("../middleware/auth");
 
-// PUBLIC: Get active projects
+// PUBLIC: Get all active projects
 router.get("/", async (req, res) => {
   try {
-    const projects = await Project.find({ active: true });
+    const projects = await Project.find({
+      active: true
+    }).sort({ createdAt: 1 });
 
-    res.json({ success: true, projects });
+    res.json({
+      success: true,
+      projects
+    });
+
   } catch (error) {
+    console.error("Projects error:", error);
+
     res.status(500).json({
       success: false,
       message: "Unable to load projects."
@@ -19,21 +27,29 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ADMIN: Get all projects — MUST COME BEFORE /:id
+// ADMIN: Get all projects
+// IMPORTANT: Keep this route before /:id
 router.get("/admin/all", adminAuth, async (req, res) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
+    const projects = await Project.find()
+      .sort({ createdAt: -1 });
 
-    res.json({ success: true, projects });
+    res.json({
+      success: true,
+      projects
+    });
+
   } catch (error) {
+    console.error("Admin projects error:", error);
+
     res.status(500).json({
       success: false,
-      message: "Unable to load projects."
+      message: "Unable to load all projects."
     });
   }
 });
 
-// ADMIN: Add project
+// ADMIN: Add new project
 router.post("/admin/add", adminAuth, async (req, res) => {
   try {
     const {
@@ -47,10 +63,15 @@ router.post("/admin/add", adminAuth, async (req, res) => {
 
     if (
       !projectName ||
+      !Number.isFinite(Number(pages)) ||
       Number(pages) <= 0 ||
+      !Number.isFinite(Number(sides)) ||
       Number(sides) <= 0 ||
+      !Number.isFinite(Number(duration)) ||
       Number(duration) <= 0 ||
+      !Number.isFinite(Number(salary)) ||
       Number(salary) <= 0 ||
+      !Number.isFinite(Number(registrationFee)) ||
       Number(registrationFee) < 0
     ) {
       return res.status(400).json({
@@ -74,7 +95,10 @@ router.post("/admin/add", adminAuth, async (req, res) => {
       message: "Project added successfully.",
       project
     });
+
   } catch (error) {
+    console.error("Add project error:", error);
+
     res.status(500).json({
       success: false,
       message: "Unable to add project."
@@ -110,10 +134,20 @@ router.patch("/admin/:id", adminAuth, async (req, res) => {
       }
     }
 
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields provided."
+      });
+    }
+
     const project = await Project.findByIdAndUpdate(
       req.params.id,
       updates,
-      { new: true, runValidators: true }
+      {
+        new: true,
+        runValidators: true
+      }
     );
 
     if (!project) {
@@ -128,7 +162,10 @@ router.patch("/admin/:id", adminAuth, async (req, res) => {
       message: "Project updated successfully.",
       project
     });
+
   } catch (error) {
+    console.error("Update project error:", error);
+
     res.status(500).json({
       success: false,
       message: "Unable to update project."
@@ -161,10 +198,13 @@ router.patch("/admin/:id/deactivate", adminAuth, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Project deactivated.",
+      message: "Project deactivated successfully.",
       project
     });
+
   } catch (error) {
+    console.error("Deactivate project error:", error);
+
     res.status(500).json({
       success: false,
       message: "Unable to deactivate project."
@@ -194,13 +234,14 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    res.json({ success: true, project });
+    res.json({
+      success: true,
+      project
+    });
+
   } catch (error) {
+    console.error("Single project error:", error);
+
     res.status(500).json({
       success: false,
-      message: "Unable to load project."
-    });
-  }
-});
-
-module.exports = router;
+      message
