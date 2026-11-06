@@ -1,15 +1,19 @@
-require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
-const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
+require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
+// PROXY SETTINGS FOR HOSTING
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
+// MIDDLEWARE
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -21,20 +25,24 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax"
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000
     }
   })
 );
 
+// CREATE UPLOAD FOLDER
+const uploadFolder = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadFolder)) {
+  fs.mkdirSync(uploadFolder, { recursive: true });
+}
+
+// STATIC FILES
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(uploadFolder));
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB Connected Successfully"))
-  .catch((error) => console.error("MongoDB Error:", error.message));
-
-// User Schema
+// USER MODEL
 const userSchema = new mongoose.Schema(
   {
     mobile: {
@@ -49,52 +57,35 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "customer"
-    },
-    fullName: String,
-    email: String,
-    address: String,
-    project: String,
-    registrationStatus: {
-      type: String,
-      default: "Not Registered"
     }
   },
   { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
+const User =
+  mongoose.models.User || mongoose.model("User", userSchema);
 
-// Health Check
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Handwriting Book Publication Server is running"
-  });
-});
+// ROUTES
+const adminRoutes = require("./routes/admin");
+const registrationRoutes = require("./routes/registration");
+const projectRoutes = require("./routes/projects");
+const paymentRoutes = require("./routes/payments");
+const chargeRoutes = require("./routes/charges");
+const salaryRoutes = require("./routes/salary");
+const parcelRoutes = require("./routes/parcel");
+const notificationRoutes = require("./routes/notifications");
+const settingsRoutes = require("./routes/settings");
+const customerRoutes = require("./routes/customers");
+const dashboardRoutes = require("./routes/dashboard");
 
-// Customer Registration
+// CUSTOMER REGISTRATION
 app.post("/api/register", async (req, res) => {
   try {
     const { mobile, password } = req.body;
 
     if (!mobile || !password) {
       return res.status(400).json({
-        success: false,
         message: "Mobile number and password are required"
-      });
-    }
-
-    if (!/^[0-9]{10}$/.test(mobile)) {
-      return res.status(400).json({
-        success: false,
-        message: "Enter a valid 10-digit mobile number"
-      });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 8 characters"
       });
     }
 
@@ -102,7 +93,6 @@ app.post("/api/register", async (req, res) => {
 
     if (existingUser) {
       return res.status(409).json({
-        success: false,
         message: "This mobile number is already registered"
       });
     }
@@ -114,91 +104,143 @@ app.post("/api/register", async (req, res) => {
       password: hashedPassword
     });
 
-    req.session.userId = user._id;
+    req.session.userId = user._id.toString();
 
     res.status(201).json({
-      success: true,
-      message: "Registration successful"
+      message: "Registration successful",
+      user: {
+        id: user._id,
+        mobile: user.mobile
+      }
     });
+
   } catch (error) {
-    console.error(error);
     res.status(500).json({
-      success: false,
       message: "Registration failed"
     });
   }
 });
 
-// Customer Login
+// CUSTOMER LOGIN
 app.post("/api/login", async (req, res) => {
   try {
     const { mobile, password } = req.body;
 
     const user = await User.findOne({ mobile });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
       return res.status(401).json({
-        success: false,
         message: "Invalid mobile number or password"
       });
     }
 
-    req.session.userId = user._id;
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        message: "Invalid mobile number or password"
+      });
+    }
+
+    req.session.userId = user._id.toString();
 
     res.json({
-      success: true,
-      message: "Login successful"
+      message: "Login successful",
+      user: {
+        id: user._id,
+        mobile: user.mobile
+      }
     });
+
   } catch (error) {
     res.status(500).json({
-      success: false,
       message: "Login failed"
     });
   }
 });
 
-// Check Login
+// CHECK LOGIN
 app.get("/api/me", async (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({
-      success: false,
-      message: "Please login first"
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({
+        message: "Please login first"
+      });
+    }
+
+    const user = await User.findById(req.session.userId)
+      .select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found"
+      });
+    }
+
+    res.json(user);
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Unable to get user details"
     });
   }
-
-  const user = await User.findById(req.session.userId).select("-password");
-
-  if (!user) {
-    return res.status(401).json({
-      success: false,
-      message: "User not found"
-    });
-  }
-
-  res.json({
-    success: true,
-    user
-  });
 });
 
-// Customer Logout
+// CUSTOMER LOGOUT
 app.post("/api/logout", (req, res) => {
   req.session.destroy(() => {
+    res.clearCookie("connect.sid");
+
     res.json({
-      success: true,
-      message: "Logged out successfully"
+      message: "Logout successful"
     });
   });
 });
 
-// Website Home
+// CONNECT ALL API ROUTES
+app.use("/api/admin", adminRoutes);
+app.use("/api/registrations", registrationRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/charges", chargeRoutes);
+app.use("/api/salary", salaryRoutes);
+app.use("/api/parcel", parcelRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/customers", customerRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+// HOME PAGE
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Start Server
+// HEALTH CHECK
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    website: "Handwriting Book Publication"
+  });
+});
+
+// DATABASE CONNECTION
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MongoDB Connected Successfully");
+
+    app.listen(PORT, () => {
+      console.log(
+        `Handwriting Book Publication running on port ${PORT}`
+      );
+    });
+  })
+  .catch((error) => {
+    console.error("MongoDB Connection Failed:", error.message);
+    process.exit(1);
+  });
