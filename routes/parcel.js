@@ -1,80 +1,82 @@
 const express = require("express");
-const Parcel = require("../models/Parcel");
-const { customerAuth, adminAuth } = require("../middleware/auth");
-
+const mongoose = require("mongoose");
 const router = express.Router();
 
-// CUSTOMER: VIEW MY PARCEL
+const Parcel = require("../models/Parcel");
+const User = require("../models/User");
+const { customerAuth, adminAuth } = require("../middleware/auth");
+
+// CUSTOMER: View own parcel details
 router.get("/my", customerAuth, async (req, res) => {
   try {
     const parcels = await Parcel.find({
       customer: req.session.userId
     }).sort({ createdAt: -1 });
 
-    res.json(parcels);
+    res.json({
+      success: true,
+      parcels
+    });
   } catch (error) {
     res.status(500).json({
-      message: "Unable to load parcel details"
+      success: false,
+      message: "Unable to load parcel details."
     });
   }
 });
 
-// ADMIN: VIEW ALL PARCELS
+// ADMIN: View all parcels
 router.get("/admin/all", adminAuth, async (req, res) => {
   try {
     const parcels = await Parcel.find()
       .populate("customer", "mobile")
       .sort({ createdAt: -1 });
 
-    res.json(parcels);
+    res.json({
+      success: true,
+      parcels
+    });
   } catch (error) {
     res.status(500).json({
-      message: "Unable to load parcels"
+      success: false,
+      message: "Unable to load parcels."
     });
   }
 });
 
-// ADMIN: ADD PARCEL
+// ADMIN: Add parcel details
 router.post("/admin/add", adminAuth, async (req, res) => {
   try {
     const {
-      customer,
+      customerId,
       courierCompany,
       dispatchDate,
       status,
       parcelNote
     } = req.body;
 
-    if (!customer || !courierCompany || !dispatchDate) {
+    if (
+      !customerId ||
+      !mongoose.Types.ObjectId.isValid(customerId) ||
+      !courierCompany ||
+      !dispatchDate
+    ) {
       return res.status(400).json({
-        message: "Please provide all required parcel details"
+        success: false,
+        message: "Please enter valid parcel details."
       });
     }
 
-    const parcel = await Parcel.create({
-      customer,
-      courierCompany,
-      dispatchDate,
-      status: status || "Preparing",
-      parcelNote
-    });
+    const customer = await User.findById(customerId);
 
-    res.status(201).json({
-      message: "Parcel added successfully",
-      parcel
-    });
+    if (!customer || customer.role !== "customer") {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found."
+      });
+    }
 
-  } catch (error) {
-    res.status(500).json({
-      message: "Unable to add parcel"
-    });
-  }
-});
-
-// ADMIN: UPDATE PARCEL STATUS
-router.patch("/admin/:id/status", adminAuth, async (req, res) => {
-  try {
-    const allowedStatuses = [
+    const validStatuses = [
       "Preparing",
       "Dispatched",
       "In Transit",
@@ -82,34 +84,117 @@ router.patch("/admin/:id/status", adminAuth, async (req, res) => {
       "Returned"
     ];
 
-    const { status } = req.body;
+    const parcelStatus = status || "Preparing";
 
-    if (!allowedStatuses.includes(status)) {
+    if (!validStatuses.includes(parcelStatus)) {
       return res.status(400).json({
-        message: "Invalid parcel status"
+        success: false,
+        message: "Invalid parcel status."
       });
+    }
+
+    const parcel = await Parcel.create({
+      customer: customerId,
+      courierCompany: courierCompany.trim(),
+      dispatchDate: new Date(dispatchDate),
+      status: parcelStatus,
+      parcelNote: parcelNote || ""
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Parcel details added successfully.",
+      parcel
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to add parcel details."
+    });
+  }
+});
+
+// ADMIN: Update parcel status and details
+router.patch("/admin/:id", adminAuth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid parcel ID."
+      });
+    }
+
+    const {
+      courierCompany,
+      dispatchDate,
+      status,
+      parcelNote
+    } = req.body;
+
+    const updates = {};
+
+    if (courierCompany !== undefined) {
+      updates.courierCompany = courierCompany.trim();
+    }
+
+    if (dispatchDate !== undefined) {
+      const date = new Date(dispatchDate);
+
+      if (Number.isNaN(date.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid dispatch date."
+        });
+      }
+
+      updates.dispatchDate = date;
+    }
+
+    if (status !== undefined) {
+      const validStatuses = [
+        "Preparing",
+        "Dispatched",
+        "In Transit",
+        "Delivered",
+        "Returned"
+      ];
+
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid parcel status."
+        });
+      }
+
+      updates.status = status;
+    }
+
+    if (parcelNote !== undefined) {
+      updates.parcelNote = parcelNote;
     }
 
     const parcel = await Parcel.findByIdAndUpdate(
       req.params.id,
-      { status },
+      updates,
       { new: true, runValidators: true }
     );
 
     if (!parcel) {
       return res.status(404).json({
-        message: "Parcel not found"
+        success: false,
+        message: "Parcel not found."
       });
     }
 
     res.json({
-      message: "Parcel status updated successfully",
+      success: true,
+      message: "Parcel details updated successfully.",
       parcel
     });
-
   } catch (error) {
     res.status(500).json({
-      message: "Unable to update parcel status"
+      success: false,
+      message: "Unable to update parcel details."
     });
   }
 });
