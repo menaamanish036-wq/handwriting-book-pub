@@ -11,22 +11,24 @@ const paymentSchema = new mongoose.Schema(
     registration: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
-      required: true
+      default: null
     },
 
     amount: {
       type: Number,
-      required: true
+      required: true,
+      min: 1
     },
 
     paymentType: {
       type: String,
       enum: ["Registration Fee", "Extra Charge"],
-      default: "Registration Fee"
+      required: true
     },
 
     transactionId: {
       type: String,
+      trim: true,
       required: true
     },
 
@@ -43,7 +45,7 @@ const paymentSchema = new mongoose.Schema(
 
     verifiedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Admin",
       default: null
     },
 
@@ -52,7 +54,9 @@ const paymentSchema = new mongoose.Schema(
       default: null
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
 module.exports = mongoose.model("Payment", paymentSchema);
