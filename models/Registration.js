@@ -10,37 +10,45 @@ const registrationSchema = new mongoose.Schema(
 
     fullName: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     mobile: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     email: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
+      lowercase: true
     },
 
     address: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     pinCode: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     district: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     state: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     project: {
@@ -51,6 +59,7 @@ const registrationSchema = new mongoose.Schema(
 
     paymentTransactionId: {
       type: String,
+      trim: true,
       default: ""
     },
 
@@ -69,9 +78,21 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending"
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null
+    },
+
+    rejectionReason: {
+      type: String,
+      default: ""
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
 module.exports = mongoose.model("Registration", registrationSchema);
