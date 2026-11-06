@@ -11,26 +11,30 @@ const salarySchema = new mongoose.Schema(
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
-      required: true
+      default: null
     },
 
     totalSalary: {
       type: Number,
-      required: true
+      required: true,
+      min: 0
     },
 
     advanceAmount: {
       type: Number,
-      required: true
+      required: true,
+      min: 0
     },
 
     remainingAmount: {
       type: Number,
-      required: true
+      required: true,
+      min: 0
     },
 
     advanceDueAt: {
-      type: Date
+      type: Date,
+      default: null
     },
 
     advanceStatus: {
@@ -45,14 +49,31 @@ const salarySchema = new mongoose.Schema(
       default: "Pending"
     },
 
-    advancePaidAt: Date,
-    remainingPaidAt: Date,
+    advancePaidAt: {
+      type: Date,
+      default: null
+    },
 
-    transactionId: String,
+    remainingPaidAt: {
+      type: Date,
+      default: null
+    },
 
-    paymentNote: String
+    transactionId: {
+      type: String,
+      default: "",
+      trim: true
+    },
+
+    paymentNote: {
+      type: String,
+      default: "",
+      trim: true
+    }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
 module.exports = mongoose.model("Salary", salarySchema);
