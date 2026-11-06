@@ -5,7 +5,7 @@ const { customerAuth, adminAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// CUSTOMER: MY PAYMENTS
+// CUSTOMER: VIEW MY PAYMENTS
 router.get("/my", customerAuth, async (req, res) => {
   try {
     const payments = await Payment.find({
@@ -14,13 +14,14 @@ router.get("/my", customerAuth, async (req, res) => {
 
     res.json(payments);
   } catch (error) {
+    console.error(error);
     res.status(500).json({
-      message: "Unable to load payments"
+      message: "Unable to load payments."
     });
   }
 });
 
-// ADMIN: ALL PAYMENTS
+// ADMIN: VIEW ALL PAYMENTS
 router.get("/admin/all", adminAuth, async (req, res) => {
   try {
     const payments = await Payment.find()
@@ -30,8 +31,9 @@ router.get("/admin/all", adminAuth, async (req, res) => {
 
     res.json(payments);
   } catch (error) {
+    console.error(error);
     res.status(500).json({
-      message: "Unable to load payments"
+      message: "Unable to load payments."
     });
   }
 });
@@ -43,7 +45,7 @@ router.patch("/admin/:id/status", adminAuth, async (req, res) => {
 
     if (!["Approved", "Rejected"].includes(status)) {
       return res.status(400).json({
-        message: "Invalid payment status"
+        message: "Invalid payment status."
       });
     }
 
@@ -51,7 +53,7 @@ router.patch("/admin/:id/status", adminAuth, async (req, res) => {
 
     if (!payment) {
       return res.status(404).json({
-        message: "Payment not found"
+        message: "Payment not found."
       });
     }
 
@@ -61,25 +63,26 @@ router.patch("/admin/:id/status", adminAuth, async (req, res) => {
 
     await payment.save();
 
+    // Update payment status in linked registration.
+    // Registration approval remains a separate admin decision.
     if (payment.registration) {
       await Registration.findByIdAndUpdate(
         payment.registration,
         {
-          paymentStatus: status,
-          registrationStatus:
-            status === "Approved" ? "Approved" : "Rejected"
+          paymentStatus: status
         }
       );
     }
 
     res.json({
-      message: `Payment ${status.toLowerCase()} successfully`,
+      message: `Payment ${status.toLowerCase()} successfully.`,
       payment
     });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({
-      message: "Unable to update payment"
+      message: "Unable to update payment."
     });
   }
 });
