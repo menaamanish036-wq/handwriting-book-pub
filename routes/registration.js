@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const Registration = require("../models/Registration");
 const Payment = require("../models/Payment");
 const Project = require("../models/Project");
@@ -7,92 +8,119 @@ const upload = require("../middleware/upload");
 
 const router = express.Router();
 
-// Submit Project Registration
+// CUSTOMER: SUBMIT PROJECT REGISTRATION
 router.post(
-    "/",
-    customerAuth,
-    upload.single("paymentScreenshot"),
-    async (req, res) => {
-        try {
-            const {
-                fullName,
-                email,
-                address,
-                pinCode,
-                district,
-                state,
-                project,
-                transactionId
-            } = req.body;
+  "/",
+  customerAuth,
+  upload.single("paymentScreenshot"),
+  async (req, res) => {
+    try {
+      const {
+        fullName,
+        email,
+        address,
+        pinCode,
+        district,
+        state,
+        transactionId
+      } = req.body;
 
-            if (
-                !fullName ||
-                !email ||
-                !address ||
-                !pinCode ||
-                !district ||
-                !state ||
-                !project ||
-                !transactionId ||
-                !req.file
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Please complete all fields and upload payment screenshot."
-                });
-            }
+      const projectId = req.body.project || req.body.projectId;
 
-            const selectedProject = await Project.findOne({
-                _id: project,
-                active: true
-            });
+      if (
+        !fullName ||
+        !email ||
+        !address ||
+        !pinCode ||
+        !district ||
+        !state ||
+        !transactionId ||
+        !projectId
+      ) {
+        return res.status(400).json({
+          message: "Please fill in all required details."
+        });
+      }
 
-            if (!selectedProject) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Selected project not found."
-                });
-            }
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Please upload your payment screenshot."
+        });
+      }
 
-            const registration = await Registration.create({
-                customer: req.session.userId,
-                fullName,
-                mobile: req.body.mobile,
-                email,
-                address,
-                pinCode,
-                district,
-                state,
-                project: selectedProject._id,
-                paymentTransactionId: transactionId,
-                paymentScreenshot: "/uploads/" + req.file.filename
-            });
+      if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        return res.status(400).json({
+          message: "Invalid project selected."
+        });
+      }
 
-            await Payment.create({
-                customer: req.session.userId,
-                registration: registration._id,
-                amount: selectedProject.registrationFee,
-                paymentType: "Registration Fee",
-                transactionId,
-                paymentScreenshot: "/uploads/" + req.file.filename,
-                paymentStatus: "Pending"
-            });
+      const User = mongoose.model("User");
 
-            res.status(201).json({
-                success: true,
-                message: "Registration submitted. Awaiting admin verification.",
-                registrationId: registration._id
-            });
+      const customer = await User.findById(req.session.userId);
 
-        } catch (error) {
-            console.error(error);
+      if (!customer) {
+        return res.status(404).json({
+          message: "Customer account not found."
+        });
+      }
 
-            res.status(500).json({
-                success: false,
-                message: "Registration submission failed."
-            });
-        }
+      const project = await Project.findOne({
+        _id: projectId,
+        active: true
+      });
+
+      if (!project) {
+        return res.status(404).json({
+          message: "Selected project is not available."
+        });
+      }
+
+      const screenshotPath = "/uploads/" + req.file.filename;
+
+      const registration = await Registration.create({
+        customer: customer._id,
+        fullName: fullName.trim(),
+        mobile: customer.mobile,
+        email: email.trim().toLowerCase(),
+        address: address.trim(),
+        pinCode: pinCode.trim(),
+        district: district.trim(),
+        state: state.trim(),
+        project: project._id,
+        paymentTransactionId: transactionId.trim(),
+        paymentScreenshot: screenshotPath,
+        paymentStatus: "Pending",
+        registrationStatus: "Pending"
+      });
+
+      try {
+        await Payment.create({
+          customer: customer._id,
+          registration: registration._id,
+          amount: project.registrationFee,
+          paymentType: "Registration Fee",
+          transactionId: transactionId.trim(),
+          paymentScreenshot: screenshotPath,
+          paymentStatus: "Pending"
+        });
+      } catch (paymentError) {
+        await Registration.findByIdAndDelete(registration._id);
+        throw paymentError;
+      }
+
+      res.status(201).json({
+        message: "Registration submitted successfully. Please wait for admin verification.",
+        registration
+      });
+
+    } catch (error) {
+      console.error("Registration Error:", error);
+
+      res.status(500).json({
+        message: "Unable to submit registration."
+      });
     }
+  }
 );
 
 module.exports = router;
