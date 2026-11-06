@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwriting Book Publication</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header">
+        <h1>Handwriting Book Publication</h1>
+        <p>Professional Handwriting Work From Home</p>
+    </header>
+
+    <main>
+        <section id="welcomeSection" class="card">
+            <h2>Welcome</h2>
+            <p>Welcome to Handwriting Book Publication.</p>
+            <p>Register or log in to explore our handwriting projects.</p>
+
+            <button onclick="showSection('registerSection')">
+                Register
+            </button>
+
+            <button onclick="showSection('loginSection')">
+                I Have a Login
+            </button>
+        </section>
+
+        <section id="registerSection" class="card hidden">
+            <h2>Create Your Account</h2>
+
+            <form id="registerForm">
+                <input
+                    type="tel"
+                    id="registerMobile"
+                    placeholder="Enter 10-digit mobile number"
+                    maxlength="10"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="registerPassword"
+                    placeholder="Create password (minimum 8 characters)"
+                    required
+                >
+
+                <button type="submit">Create Account</button>
+            </form>
+
+            <p>Already registered?
+                <a href="#" onclick="showSection('loginSection')">Login</a>
+            </p>
+
+            <button class="backButton" onclick="showSection('welcomeSection')">
+                Back
+            </button>
+        </section>
+
+        <section id="loginSection" class="card hidden">
+            <h2>Customer Login</h2>
+
+            <form id="loginForm">
+                <input
+                    type="tel"
+                    id="loginMobile"
+                    placeholder="Enter mobile number"
+                    maxlength="10"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Enter password"
+                    required
+                >
+
+                <button type="submit">Login</button>
+            </form>
+
+            <button class="backButton" onclick="showSection('welcomeSection')">
+                Back
+            </button>
+        </section>
+
+        <section id="dashboardSection" class="card hidden">
+            <h2>Customer Dashboard</h2>
+            <p id="customerWelcome">Welcome!</p>
+
+            <button onclick="logout()">Logout</button>
+        </section>
+
+        <p id="message"></p>
+    </main>
+
+    <footer>
+        <p>© 2026 Handwriting Book Publication. All Rights Reserved.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
