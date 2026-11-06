@@ -1,50 +1,67 @@
 const express = require("express");
-const Settings = require("../models/Settings");
-const { adminAuth } = require("../middleware/auth");
-const upload = require("../middleware/upload");
-
 const router = express.Router();
 
-// GET PUBLIC BUSINESS SETTINGS
+const Settings = require("../models/Settings");
+const upload = require("../middleware/upload");
+const { adminAuth } = require("../middleware/auth");
+
+// Get or create website settings
+async function getSettings() {
+  let settings = await Settings.findOne();
+
+  if (!settings) {
+    settings = await Settings.create({
+      businessName: "Handwriting Book Publication",
+      contactEmail: "meenamanish036@gmail.com",
+      whatsappNumber: "9460642427",
+      paymentInstructions: "Please complete your payment and submit the transaction ID."
+    });
+  }
+
+  return settings;
+}
+
+// PUBLIC: Get contact and payment settings
 router.get("/", async (req, res) => {
   try {
-    let settings = await Settings.findOne();
-
-    if (!settings) {
-      settings = await Settings.create({
-        businessName: "Handwriting Book Publication",
-        contactEmail: "meenamanish036@gmail.com",
-        whatsappNumber: "9460642427"
-      });
-    }
+    const settings = await getSettings();
 
     res.json({
-      businessName: settings.businessName,
-      contactEmail: settings.contactEmail,
-      whatsappNumber: settings.whatsappNumber,
-      paymentQrImage: settings.paymentQrImage,
-      paymentInstructions: settings.paymentInstructions
+      success: true,
+      settings: {
+        businessName: settings.businessName,
+        contactEmail: settings.contactEmail,
+        whatsappNumber: settings.whatsappNumber,
+        paymentQrImage: settings.paymentQrImage,
+        paymentInstructions: settings.paymentInstructions
+      }
     });
   } catch (error) {
     res.status(500).json({
-      message: "Unable to load settings"
+      success: false,
+      message: "Unable to load website settings."
     });
   }
 });
 
-// ADMIN: VIEW SETTINGS
+// ADMIN: View all settings
 router.get("/admin", adminAuth, async (req, res) => {
   try {
-    const settings = await Settings.findOne();
-    res.json(settings);
+    const settings = await getSettings();
+
+    res.json({
+      success: true,
+      settings
+    });
   } catch (error) {
     res.status(500).json({
-      message: "Unable to load admin settings"
+      success: false,
+      message: "Unable to load admin settings."
     });
   }
 });
 
-// ADMIN: UPDATE BUSINESS CONTACT DETAILS
+// ADMIN: Update contact and payment settings
 router.patch("/admin/update", adminAuth, async (req, res) => {
   try {
     const {
@@ -54,65 +71,75 @@ router.patch("/admin/update", adminAuth, async (req, res) => {
       paymentInstructions
     } = req.body;
 
-    const settings = await Settings.findOneAndUpdate(
-      {},
-      {
-        businessName,
-        contactEmail,
-        whatsappNumber,
-        paymentInstructions
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true
-      }
-    );
+    const settings = await getSettings();
+
+    if (businessName !== undefined) {
+      settings.businessName = businessName.trim();
+    }
+
+    if (contactEmail !== undefined) {
+      settings.contactEmail = contactEmail.trim();
+    }
+
+    if (whatsappNumber !== undefined) {
+      settings.whatsappNumber = whatsappNumber.trim();
+    }
+
+    if (paymentInstructions !== undefined) {
+      settings.paymentInstructions = paymentInstructions.trim();
+    }
+
+    await settings.save();
 
     res.json({
-      message: "Settings updated successfully",
+      success: true,
+      message: "Website settings updated successfully.",
       settings
     });
   } catch (error) {
     res.status(500).json({
-      message: "Unable to update settings"
+      success: false,
+      message: "Unable to update website settings."
     });
   }
 });
 
-// ADMIN: UPLOAD OR REPLACE PAYMENT QR
+// ADMIN: Upload or replace payment QR code
 router.post(
   "/admin/upload-qr",
   adminAuth,
-  upload.single("paymentQrImage"),
+  upload.single("paymentQr"),
   async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({
-          message: "Please select a QR image"
+          success: false,
+          message: "Please select a QR code image."
         });
       }
 
-      const settings = await Settings.findOneAndUpdate(
-        {},
-        {
-          paymentQrImage: `/uploads/${req.file.filename}`
-        },
-        {
-          new: true,
-          upsert: true,
-          setDefaultsOnInsert: true
-        }
-      );
+      if (!["image/jpeg", "image/png", "image/webp"].includes(req.file.mimetype)) {
+        return res.status(400).json({
+          success: false,
+          message: "Only JPG, PNG and WEBP QR images are allowed."
+        });
+      }
+
+      const settings = await getSettings();
+
+      settings.paymentQrImage = `/uploads/${req.file.filename}`;
+
+      await settings.save();
 
       res.json({
-        message: "Payment QR uploaded successfully",
+        success: true,
+        message: "Payment QR code uploaded successfully.",
         paymentQrImage: settings.paymentQrImage
       });
     } catch (error) {
       res.status(500).json({
-        message: "Unable to upload payment QR"
+        success: false,
+        message: "Unable to upload QR code."
       });
     }
   }
