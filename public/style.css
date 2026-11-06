@@ -1,0 +1,133 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #090909;
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+.header {
+    text-align: center;
+    padding: 35px 15px;
+    background: #111111;
+    border-bottom: 2px solid #d4af37;
+}
+
+.header h1 {
+    color: #d4af37;
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.header p {
+    color: #cccccc;
+    font-size: 14px;
+}
+
+main {
+    width: 90%;
+    max-width: 500px;
+    margin: 50px auto;
+}
+
+.card {
+    background: #151515;
+    border: 1px solid #d4af37;
+    border-radius: 15px;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
+}
+
+.card h2 {
+    color: #d4af37;
+    margin-bottom: 20px;
+}
+
+.card p {
+    color: #dddddd;
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+input {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin: 15px 0;
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    background: #080808;
+    color: #ffffff;
+    font-size: 15px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #ffffff;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: #d4af37;
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f1d36b;
+}
+
+.backButton {
+    background: #333333;
+    color: #ffffff;
+}
+
+a {
+    color: #d4af37;
+    text-decoration: none;
+}
+
+.hidden {
+    display: none;
+}
+
+#message {
+    text-align: center;
+    margin-top: 20px;
+    color: #d4af37;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #999999;
+    font-size: 13px;
+    border-top: 1px solid #333333;
+    margin-top: 50px;
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 22px;
+    }
+
+    main {
+        margin: 30px auto;
+    }
+
+    .card {
+        padding: 25px 15px;
+    }
+      }
