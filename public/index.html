@@ -3,103 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Handwriting Book Publication</title>
+
+    <meta name="description" content="Handwriting Book Publication - Handwriting projects and work opportunities.">
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <header class="header">
-        <h1>Handwriting Book Publication</h1>
-        <p>Professional Handwriting Work From Home</p>
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="logo">
+            <h2>Handwriting Book Publication</h2>
+        </div>
+
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#about">About Us</a>
+            <a href="#projects">Our Projects</a>
+            <a href="#contact">Contact</a>
+        </nav>
     </header>
 
-    <main>
-        <section id="welcomeSection" class="card">
-            <h2>Welcome</h2>
-            <p>Welcome to Handwriting Book Publication.</p>
-            <p>Register or log in to explore our handwriting projects.</p>
+    <!-- WELCOME SECTION -->
+    <section id="home" class="hero-section">
 
-            <button onclick="showSection('registerSection')">
-                Register
-            </button>
+        <h1>Welcome to Handwriting Book Publication</h1>
 
-            <button onclick="showSection('loginSection')">
-                I Have a Login
-            </button>
-        </section>
+        <p>
+            Explore our handwriting projects and registration opportunities.
+        </p>
 
-        <section id="registerSection" class="card hidden">
-            <h2>Create Your Account</h2>
+        <div class="hero-buttons">
+            <a href="#register" class="btn">Register Now</a>
+            <a href="#login" class="btn">I Have a Login</a>
+        </div>
 
-            <form id="registerForm">
-                <input
-                    type="tel"
-                    id="registerMobile"
-                    placeholder="Enter 10-digit mobile number"
-                    maxlength="10"
-                    required
-                >
+    </section>
 
-                <input
-                    type="password"
-                    id="registerPassword"
-                    placeholder="Create password (minimum 8 characters)"
-                    required
-                >
+    <!-- ABOUT SECTION -->
+    <section id="about" class="content-section">
 
-                <button type="submit">Create Account</button>
-            </form>
+        <h2>About Us</h2>
 
-            <p>Already registered?
-                <a href="#" onclick="showSection('loginSection')">Login</a>
-            </p>
+        <p>
+            Handwriting Book Publication provides handwriting project
+            information, customer registration and project management services.
+        </p>
 
-            <button class="backButton" onclick="showSection('welcomeSection')">
-                Back
-            </button>
-        </section>
+    </section>
 
-        <section id="loginSection" class="card hidden">
-            <h2>Customer Login</h2>
+    <!-- PROJECTS SECTION -->
+    <section id="projects" class="content-section">
 
-            <form id="loginForm">
-                <input
-                    type="tel"
-                    id="loginMobile"
-                    placeholder="Enter mobile number"
-                    maxlength="10"
-                    required
-                >
+        <h2>Our Projects</h2>
 
-                <input
-                    type="password"
-                    id="loginPassword"
-                    placeholder="Enter password"
-                    required
-                >
+        <div class="project-container">
 
-                <button type="submit">Login</button>
-            </form>
+            <div class="project-card">
+                <h3>Project 1</h3>
+                <p>Pages: 50</p>
+                <p>Sides: 100</p>
+                <p>Duration: 7 Days</p>
+                <p>Listed Salary: ₹25,000</p>
+                <p>Registration Fee: ₹499</p>
+            </div>
 
-            <button class="backButton" onclick="showSection('welcomeSection')">
-                Back
-            </button>
-        </section>
+            <div class="project-card">
+                <h3>Project 2</h3>
+                <p>Pages: 90</p>
+                <p>Sides: 180</p>
+                <p>Duration: 10 Days</p>
+                <p>Listed Salary: ₹30,000</p>
+                <p>Registration Fee: ₹750</p>
+            </div>
 
-        <section id="dashboardSection" class="card hidden">
-            <h2>Customer Dashboard</h2>
-            <p id="customerWelcome">Welcome!</p>
+            <div class="project-card">
+                <h3>Project 3</h3>
+                <p>Pages: 120</p>
+                <p>Sides: 240</p>
+                <p>Duration: 15 Days</p>
+                <p>Listed Salary: ₹35,000</p>
+                <p>Registration Fee: ₹1,199</p>
+            </div>
 
-            <button onclick="logout()">Logout</button>
-        </section>
+            <div class="project-card">
+                <h3>Project 4</h3>
+                <p>Pages: 190</p>
+                <p>Sides: 380</p>
+                <p>Duration: 26 Days</p>
+                <p>Listed Salary: ₹40,000</p>
+                <p>Registration Fee: ₹1,499</p>
+            </div>
 
-        <p id="message"></p>
-    </main>
+        </div>
 
+        <p class="notice">
+            Project terms and work acceptance conditions apply.
+        </p>
+
+    </section>
+
+    <!-- REGISTRATION -->
+    <section id="register" class="form-section">
+
+        <h2>Create Your Account</h2>
+
+        <form id="registerForm">
+
+            <input
+                type="tel"
+                id="registerMobile"
+                placeholder="Enter Mobile Number"
+                required
+            >
+
+            <input
+                type="password"
+                id="registerPassword"
+                placeholder="Create Password"
+                required
+            >
+
+            <input
+                type="password"
+                id="confirmPassword"
+                placeholder="Confirm Password"
+                required
+            >
+
+            <button type="submit">Create Account</button>
+
+        </form>
+
+    </section>
+
+    <!-- LOGIN -->
+    <section id="login" class="form-section">
+
+        <h2>Customer Login</h2>
+
+        <form id="loginForm">
+
+            <input
+                type="tel"
+                id="loginMobile"
+                placeholder="Enter Mobile Number"
+                required
+            >
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Enter Password"
+                required
+            >
+
+            <button type="submit">Login</button>
+
+        </form>
+
+    </section>
+
+    <p id="authMessage"></p>
+
+    <!-- CUSTOMER DASHBOARD -->
+    <section id="dashboardSection" class="content-section" hidden>
+
+        <h2>Customer Dashboard</h2>
+
+        <p>Welcome to your customer account.</p>
+
+        <p id="dashboardMobile"></p>
+
+        <div class="dashboard-links">
+            <a href="#" id="profileLink">My Profile</a>
+            <a href="#" id="projectLink">My Project</a>
+            <a href="#" id="registrationLink">My Registration</a>
+            <a href="#" id="paymentLink">My Payments</a>
+            <a href="#" id="chargesLink">My Charges</a>
+            <a href="#" id="salaryLink">My Salary</a>
+            <a href="#" id="parcelLink">My Parcel</a>
+            <a href="#" id="notificationLink">Notifications</a>
+        </div>
+
+        <button id="logoutBtn" type="button">Logout</button>
+
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="content-section">
+
+        <h2>Contact Us</h2>
+
+        <p>Email: meenamanish036@gmail.com</p>
+
+        <p>WhatsApp: 9460642427</p>
+
+        <p>
+            For assistance, contact our support team.
+        </p>
+
+    </section>
+
+    <!-- FOOTER -->
     <footer>
         <p>© 2026 Handwriting Book Publication. All Rights Reserved.</p>
     </footer>
 
     <script src="app.js"></script>
+
 </body>
 </html>
