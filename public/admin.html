@@ -73,4 +73,413 @@
             background: #d4af37;
             color: black;
             border: none;
-           
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: white;
+        }
+
+        .login-box button {
+            width: 100%;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: #151515;
+            border: 1px solid #d4af37;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #d4af37;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            font-size: 27px;
+            font-weight: bold;
+        }
+
+        .modules {
+            margin-top: 35px;
+        }
+
+        .modules h2 {
+            text-align: left;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .module {
+            background: #151515;
+            border: 1px solid #555;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .module h3 {
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .module p {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        #message {
+            text-align: center;
+            margin: 15px 0;
+            color: #d4af37;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #d4af37;
+            border-top: 1px solid #333;
+            margin-top: 40px;
+        }
+
+        @media(max-width: 500px) {
+            header h1 {
+                font-size: 20px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Handwriting Book Publication</h1>
+        <p>Admin Control Panel</p>
+    </header>
+
+    <div class="container">
+
+        <!-- ADMIN LOGIN -->
+
+        <section class="login-box" id="loginSection">
+
+            <h2>Admin Login</h2>
+
+            <form id="adminLoginForm">
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Admin Username"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Admin Password"
+                    required
+                >
+
+                <button type="submit">Login to Admin Panel</button>
+
+            </form>
+
+        </section>
+
+        <p id="message"></p>
+
+        <!-- ADMIN DASHBOARD -->
+
+        <section class="dashboard" id="dashboardSection">
+
+            <div class="top-bar">
+
+                <div>
+                    <h2>Admin Dashboard</h2>
+                    <p>Welcome to your control panel.</p>
+                </div>
+
+                <button id="logoutButton">Logout</button>
+
+            </div>
+
+            <!-- STATISTICS -->
+
+            <div class="cards">
+
+                <div class="card">
+                    <h3>Total Customers</h3>
+                    <p id="totalCustomers">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Total Registrations</h3>
+                    <p id="totalRegistrations">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Pending Approvals</h3>
+                    <p id="pendingApprovals">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Approved Registrations</h3>
+                    <p id="approvedRegistrations">0</p>
+                </div>
+
+            </div>
+
+            <!-- ADMIN MODULES -->
+
+            <div class="modules">
+
+                <h2>Management Modules</h2>
+
+                <div class="module-grid">
+
+                    <div class="module">
+                        <h3>Customer Management</h3>
+                        <p>View and manage customer accounts.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Registration Management</h3>
+                        <p>Review registration applications.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Payment Management</h3>
+                        <p>Review and verify customer payments.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Projects Management</h3>
+                        <p>Manage project details and fees.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Extra Charges</h3>
+                        <p>Manage customer-specific charges.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Salary Management</h3>
+                        <p>Manage advance and remaining salary records.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Parcel Management</h3>
+                        <p>Manage courier company and parcel status.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>QR Code Settings</h3>
+                        <p>Manage the customer payment QR code.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Contact Settings</h3>
+                        <p>Manage WhatsApp number and email address.</p>
+                    </div>
+
+                    <div class="module">
+                        <h3>Notifications</h3>
+                        <p>Manage customer notifications.</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+    <footer>
+        © 2026 Handwriting Book Publication
+    </footer>
+
+    <script>
+
+        const loginSection = document.getElementById("loginSection");
+        const dashboardSection = document.getElementById("dashboardSection");
+        const message = document.getElementById("message");
+
+        // ADMIN LOGIN
+
+        document.getElementById("adminLoginForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+
+            try {
+
+                const response = await fetch("/api/admin/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    message.textContent = data.message || "Invalid admin login.";
+                    return;
+                }
+
+                message.textContent = "Login successful.";
+
+                await checkAdminLogin();
+
+            } catch (error) {
+
+                message.textContent = "Server connection failed.";
+
+            }
+
+        });
+
+
+        // CHECK ADMIN LOGIN
+
+        async function checkAdminLogin() {
+
+            try {
+
+                const response = await fetch("/api/admin/me", {
+                    credentials: "include"
+                });
+
+                if (!response.ok) {
+                    loginSection.style.display = "block";
+                    dashboardSection.style.display = "none";
+                    return;
+                }
+
+                loginSection.style.display = "none";
+                dashboardSection.style.display = "block";
+
+                loadDashboard();
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+
+        }
+
+
+        // LOAD DASHBOARD STATISTICS
+
+        async function loadDashboard() {
+
+            try {
+
+                const response = await fetch("/api/dashboard", {
+                    credentials: "include"
+                });
+
+                if (!response.ok) {
+                    message.textContent = "Unable to load dashboard statistics.";
+                    return;
+                }
+
+                const data = await response.json();
+
+                document.getElementById("totalCustomers").textContent =
+                    data.totalCustomers ?? 0;
+
+                document.getElementById("totalRegistrations").textContent =
+                    data.totalRegistrations ?? 0;
+
+                document.getElementById("pendingApprovals").textContent =
+                    data.pendingApprovals ?? 0;
+
+                document.getElementById("approvedRegistrations").textContent =
+                    data.approvedRegistrations ?? 0;
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+
+        }
+
+
+        // ADMIN LOGOUT
+
+        document.getElementById("logoutButton")
+        .addEventListener("click", async function() {
+
+            try {
+
+                await fetch("/api/admin/logout", {
+                    method: "POST",
+                    credentials: "include"
+                });
+
+                dashboardSection.style.display = "none";
+                loginSection.style.display = "block";
+
+                message.textContent = "You have logged out.";
+
+            } catch (error) {
+
+                message.textContent = "Logout failed.";
+
+            }
+
+        });
+
+
+        // CHECK SESSION ON PAGE LOAD
+
+        checkAdminLogin();
+
+    </script>
+
+</body>
+</html>
