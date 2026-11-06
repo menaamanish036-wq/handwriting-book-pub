@@ -1,84 +1,87 @@
 const express = require("express");
 const Payment = require("../models/Payment");
+const Registration = require("../models/Registration");
 const { customerAuth, adminAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// Customer: View Own Payments
+// CUSTOMER: MY PAYMENTS
 router.get("/my", customerAuth, async (req, res) => {
-    try {
-        const payments = await Payment.find({
-            customer: req.session.userId
-        }).sort({ createdAt: -1 });
+  try {
+    const payments = await Payment.find({
+      customer: req.session.userId
+    }).sort({ createdAt: -1 });
 
-        res.json({
-            success: true,
-            payments
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Unable to load payments"
-        });
-    }
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({
+      message: "Unable to load payments"
+    });
+  }
 });
 
-// Admin: View All Payments
+// ADMIN: ALL PAYMENTS
 router.get("/admin/all", adminAuth, async (req, res) => {
-    try {
-        const payments = await Payment.find()
-            .populate("customer", "mobile fullName")
-            .sort({ createdAt: -1 });
+  try {
+    const payments = await Payment.find()
+      .populate("customer", "mobile")
+      .populate("registration")
+      .sort({ createdAt: -1 });
 
-        res.json({ success: true, payments });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Unable to load payments"
-        });
-    }
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({
+      message: "Unable to load payments"
+    });
+  }
 });
 
-// Admin: Approve or Reject Payment
+// ADMIN: APPROVE OR REJECT PAYMENT
 router.patch("/admin/:id/status", adminAuth, async (req, res) => {
-    try {
-        const { status } = req.body;
+  try {
+    const { status } = req.body;
 
-        if (!["Approved", "Rejected"].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid payment status"
-            });
-        }
-
-        const payment = await Payment.findByIdAndUpdate(
-            req.params.id,
-            {
-                paymentStatus: status,
-                verifiedBy: req.session.adminId,
-                verifiedAt: new Date()
-            },
-            { new: true }
-        );
-
-        if (!payment) {
-            return res.status(404).json({
-                success: false,
-                message: "Payment not found"
-            });
-        }
-
-        res.json({
-            success: true,
-            message: "Payment status updated",
-            payment
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Payment update failed"
-        });
+    if (!["Approved", "Rejected"].includes(status)) {
+      return res.status(400).json({
+        message: "Invalid payment status"
+      });
     }
+
+    const payment = await Payment.findById(req.params.id);
+
+    if (!payment) {
+      return res.status(404).json({
+        message: "Payment not found"
+      });
+    }
+
+    payment.paymentStatus = status;
+    payment.verifiedBy = req.session.adminId;
+    payment.verifiedAt = new Date();
+
+    await payment.save();
+
+    if (payment.registration) {
+      await Registration.findByIdAndUpdate(
+        payment.registration,
+        {
+          paymentStatus: status,
+          registrationStatus:
+            status === "Approved" ? "Approved" : "Rejected"
+        }
+      );
+    }
+
+    res.json({
+      message: `Payment ${status.toLowerCase()} successfully`,
+      payment
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Unable to update payment"
+    });
+  }
 });
 
 module.exports = router;
