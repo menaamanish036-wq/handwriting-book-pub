@@ -16,7 +16,7 @@ const adminSchema = new mongoose.Schema(
 
     fullName: {
       type: String,
-      default: "Administrator"
+      default: "Website Administrator"
     },
 
     role: {
@@ -34,7 +34,11 @@ const adminSchema = new mongoose.Schema(
       default: null
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
-module.exports = mongoose.model("Admin", adminSchema);
+module.exports =
+  mongoose.models.Admin ||
+  mongoose.model("Admin", adminSchema);
